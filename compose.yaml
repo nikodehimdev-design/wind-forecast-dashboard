@@ -1,0 +1,28 @@
+services:
+  backend:
+    build: ./backend
+    ports:
+      - "8000:8000"
+    environment:
+      CORS_ORIGINS: http://localhost:5173,http://127.0.0.1:5173
+      WIND_FORECAST_DB_PATH: /data/wind_forecasts.sqlite3
+    volumes:
+      - forecast_archive:/data
+  forecast-collector:
+    build: ./backend
+    command: ["python", "-m", "app.services.forecast_collector"]
+    environment:
+      WIND_FORECAST_DB_PATH: /data/wind_forecasts.sqlite3
+      WIND_FORECAST_POLL_SECONDS: "900"
+    volumes:
+      - forecast_archive:/data
+    restart: unless-stopped
+  frontend:
+    build: ./frontend
+    ports:
+      - "5173:80"
+    depends_on:
+      - backend
+
+volumes:
+  forecast_archive:
